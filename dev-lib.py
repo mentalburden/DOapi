@@ -4,9 +4,53 @@ import time
 import json
 import requests
 
-apitoken = 'nowayjose'
+apitoken = 'hahayeahright'
 apiurl = 'https://api.digitalocean.com'
 report = ['DO account stats', '  ', '  ']
+#regions = {}
+
+def checkkeymat():
+        #Get all pub keys associated with account and provide a dict with name:id pairs
+        allkeys = {}
+        apiendpoint = apiurl + '/v2/account/keys'
+        headerboi =  {'Content-Type':'application/json','Authorization': 'Bearer {}'.format(apitoken)}
+        req = requests.get(apiendpoint, headers=headerboi)
+        jason = req.json()
+        for keymat in jason['ssh_keys']:
+                thisname = str(keymat['name'])
+                thisid = str(keymat['id'])
+                allkeys.update({thisname : thisid})
+        return allkeys
+
+def checkkeymatbyid(keyid):
+        #Returns name of given key id
+        thiskeymat = checkkeymat()
+        for name,id in thiskeymat.items():
+                if id == keyid:
+                        print(name)
+                        return name
+
+def checkkeymatbyname(keyname):
+        #Returns id of given key name
+        thiskeymat = checkkeymat()
+        for name,id in thiskeymat.items():
+                if name == keyname:
+                        print(id)
+                        return id
+
+def uploadkeymat(keyname,pubstring):
+        apiendpoint = apiurl + '/v2/account/keys'
+        headerboi =  {'Content-Type':'application/json','Authorization': 'Bearer {}'.format(apitoken)}
+        databoi = {'name': '{}'.format(keyname), 'public_key': '{}'.format(pubstring) }
+        req = requests.post(apiendpoint, json=databoi, headers=headerboi)
+        jason = req.json()
+        try:
+                pubkeyname = str(jason['ssh_key']['name'])
+                pubkeyid = str(jason['ssh_key']['id'])
+                print("Successfully uploaded pubkey '" + pubkeyname + "' at ID#: " + pubkeyid)
+                return pubkeyid
+        except:
+                print("PubKey upload failed, pubkey may already exist...")
 
 def getregions():
         #returns a dict of valid regions and size
@@ -41,7 +85,6 @@ def checkregions(region, size):
                         break
 
 def createdroplet(name, region, size, image):
-        #Begin droplet provisioning, then handover to checkdroplet() to get IP and stats
         regionandsize = checkregions(region, size)
         apiendpoint = apiurl + '/v2/droplets'
         headerboi =  {'Content-Type':'application/json','Authorization': 'Bearer {}'.format(apitoken)}
@@ -55,7 +98,6 @@ def createdroplet(name, region, size, image):
         checkdroplet(did)
 
 def checkdroplet(did):
-        #Check droplet by id
         apiendpoint = apiurl + '/v2/droplets/' + did
         headerboi =  {'Content-Type':'application/json','Authorization': 'Bearer {}'.format(apitoken)}
         req = requests.get(apiendpoint, headers=headerboi)
@@ -70,7 +112,6 @@ def checkdroplet(did):
         print("This droplet has " + thiscpu + "vcpus, " + thisram + "ram, and " + thisdisk + "GB of disk.")
 
 def checkdroplets():
-        #Check all droplets on account
         apiendpoint = apiurl + '/v2/droplets'
         headerboi =  {'Content-Type':'application/json','Authorization': 'Bearer {}'.format(apitoken)}
         req = requests.get(apiendpoint, headers=headerboi)
@@ -84,7 +125,6 @@ def checkdroplets():
                 report.append(str(" --- "))
 
 def checkbalance():
-        #Get current monthly billing info
         apiendpoint = apiurl + '/v2/customers/my/balance'
         headerboi =  {'Content-Type':'application/json','Authorization': 'Bearer {}'.format(apitoken)}
         req = requests.get(apiendpoint, headers=headerboi)
@@ -92,9 +132,11 @@ def checkbalance():
         report.append(str("Current balance due: " + jason['month_to_date_usage']))
         report.append(str("This report was generated on: " +jason['generated_at']))
 
-
+#checkkeymat()
+#checkkeymatbyid('13371337')
+#checkkeymatbyname('chonkerkey1')
+#uploadkeymat('chonkerkey1','ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNonahyoudontneedthiseitherYbqlxvoi941Mt58txegWUmR9eN/FZOawSJgQT3We4BJwBUOv/kGpragXDAXVx89aIulWda2BUSNjRvRjMbiyYNgHQ1xybNyFxzJdfMgU4iCUs9gKY7WTPu2OnZChrUz+dtMoPLVD9XHF7Q+jZsWkhMNCyGE45ITPjjqrzkQACgZV4eA== root')
 #checkregions('nyc1','1gb')
-#checkregions('bunchajunk','200000GB')
 #getregions()
 #print(regions['nyc1'])
 #createdroplet("brongletest","nyc1","1gb", "ubuntu-16-04-x64")

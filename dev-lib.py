@@ -1,16 +1,25 @@
 #!/usr/bin/python3
 
+import sys
 import time
 import json
 import requests
 
-apitoken = 'hahayeahright'
+#MB/22andme DO API Library
+#OOO:
+#0: User goes through purple to pay set amount, then gets URL for entrypoint webui
+#1: User inputs PubKeyName and PubKey at entrypoint webui
+#2: Upload pubkey info to DO API Burner Account for that day/week (depends on op tempo)
+#3: After successful keymat upload, Builds Droplet with the same name as the PubKeyName
+#4: Returns basic info about the droplet to the user, entrypoint provides phpshell (for tails users)
+#5: Runs timer (displayed to user), at zero deletes droplet and ssh-key, nukes webui too
+
+#PROTECT THE BEARER, OPSEC!
+apitoken = 'nowayjose'
 apiurl = 'https://api.digitalocean.com'
 report = ['DO account stats', '  ', '  ']
-#regions = {}
 
 def checkkeymat():
-        #Get all pub keys associated with account and provide a dict with name:id pairs
         allkeys = {}
         apiendpoint = apiurl + '/v2/account/keys'
         headerboi =  {'Content-Type':'application/json','Authorization': 'Bearer {}'.format(apitoken)}
@@ -36,7 +45,7 @@ def checkkeymatbyname(keyname):
         for name,id in thiskeymat.items():
                 if name == keyname:
                         print(id)
-                        return id
+                        return int(id)
 
 def uploadkeymat(keyname,pubstring):
         apiendpoint = apiurl + '/v2/account/keys'
@@ -85,10 +94,12 @@ def checkregions(region, size):
                         break
 
 def createdroplet(name, region, size, image):
+        #DEPENDS ON NAME OF PUBKEY, PUBKEY MUST BE UPLOADED FIRST
+        #Generates a droplet with given args above
         regionandsize = checkregions(region, size)
         apiendpoint = apiurl + '/v2/droplets'
         headerboi =  {'Content-Type':'application/json','Authorization': 'Bearer {}'.format(apitoken)}
-        databoi = {'name': '{}'.format(name), 'region': '{}'.format(regionandsize[0]), 'size': '{}'.format(regionandsize[1]), 'image': '{}'.format(image)}
+        databoi = {'name': '{}'.format(name), 'region': '{}'.format(regionandsize[0]), 'size': '{}'.format(regionandsize[1]), 'image': '{}'.format(image), 'ssh_keys': ['{}'.format(int(checkkeymatbyname(name)))]}
         req = requests.post(apiendpoint, json=databoi, headers=headerboi)
         jason = req.json()
         did = str(jason['droplet']['id'])
@@ -132,16 +143,17 @@ def checkbalance():
         report.append(str("Current balance due: " + jason['month_to_date_usage']))
         report.append(str("This report was generated on: " +jason['generated_at']))
 
+        
+#debug junk below
 #checkkeymat()
-#checkkeymatbyid('13371337')
+#checkkeymatbyid('51505150')
 #checkkeymatbyname('chonkerkey1')
-#uploadkeymat('chonkerkey1','ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNonahyoudontneedthiseitherYbqlxvoi941Mt58txegWUmR9eN/FZOawSJgQT3We4BJwBUOv/kGpragXDAXVx89aIulWda2BUSNjRvRjMbiyYNgHQ1xybNyFxzJdfMgU4iCUs9gKY7WTPu2OnZChrUz+dtMoPLVD9XHF7Q+jZsWkhMNCyGE45ITPjjqrzkQACgZV4eA== root')
+#uploadkeymat('chonkerkey1','ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEhahanowayBJwBUgZV4eA== root')
 #checkregions('nyc1','1gb')
 #getregions()
 #print(regions['nyc1'])
-#createdroplet("brongletest","nyc1","1gb", "ubuntu-16-04-x64")
+#createdroplet("chonkerkey1","nyc1","1gb", "ubuntu-16-04-x64")
 #checkbalance()
 #checkdroplets()
 #for i in report:
 #       print(i)
-

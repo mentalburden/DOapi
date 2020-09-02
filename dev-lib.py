@@ -15,9 +15,16 @@ import requests
 #5: Runs timer (displayed to user), at zero deletes droplet and ssh-key, nukes webui too
 
 #PROTECT THE BEARER, OPSEC!
-apitoken = 'nowayjose'
+apitoken = 'hahaimnotthattired'
 apiurl = 'https://api.digitalocean.com'
 report = ['DO account stats', '  ', '  ']
+burntag = "test"
+
+def superdangerburnbytag(burntag):
+        apiendpoint = apiurl + '/v2/droplets?tag_name=' + burntag
+        headerboi =  {'Content-Type':'application/json','Authorization': 'Bearer {}'.format(apitoken)}
+        req = requests.delete(apiendpoint, headers=headerboi)
+        print("DELETE BY TAG FUNCTION RAN - CHECK THE WEBUI TO VERIFY DELETION!")
 
 def checkkeymat():
         allkeys = {}
@@ -94,19 +101,21 @@ def checkregions(region, size):
                         break
 
 def createdroplet(name, region, size, image):
-        #DEPENDS ON NAME OF PUBKEY, PUBKEY MUST BE UPLOADED FIRST
+        #DEPENDS ON NAME OF PUBKEY, PUBKEY MUST BE UPLOADED FIRST, combine the funcs dummy
         #Generates a droplet with given args above
+        thesetags = [burntag]
         regionandsize = checkregions(region, size)
         apiendpoint = apiurl + '/v2/droplets'
         headerboi =  {'Content-Type':'application/json','Authorization': 'Bearer {}'.format(apitoken)}
-        databoi = {'name': '{}'.format(name), 'region': '{}'.format(regionandsize[0]), 'size': '{}'.format(regionandsize[1]), 'image': '{}'.format(image), 'ssh_keys': ['{}'.format(int(checkkeymatbyname(name)))]}
+        databoi = {'name': '{}'.format(name), 'tags': thesetags, 'region': '{}'.format(regionandsize[0]), 'size': '{}'.format(regionandsize[1]), 'image': '{}'.format(image), 'ssh_keys': ['{}'.format(int(checkkeymatbyname(name)))]}
         req = requests.post(apiendpoint, json=databoi, headers=headerboi)
         jason = req.json()
         did = str(jason['droplet']['id'])
         print("Created a droplet with ID:" + did)
         print("Waiting for provisioning...")
-        time.sleep(15)
-        checkdroplet(did)
+        #needs to have a 1+ second for throttling
+        time.sleep(7)
+#       checkdroplet(did)
 
 def checkdroplet(did):
         apiendpoint = apiurl + '/v2/droplets/' + did
@@ -143,17 +152,19 @@ def checkbalance():
         report.append(str("Current balance due: " + jason['month_to_date_usage']))
         report.append(str("This report was generated on: " +jason['generated_at']))
 
-        
+
+
+
+
 #debug junk below
-#checkkeymat()
-#checkkeymatbyid('51505150')
-#checkkeymatbyname('chonkerkey1')
-#uploadkeymat('chonkerkey1','ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEhahanowayBJwBUgZV4eA== root')
-#checkregions('nyc1','1gb')
-#getregions()
-#print(regions['nyc1'])
-#createdroplet("chonkerkey1","nyc1","1gb", "ubuntu-16-04-x64")
-#checkbalance()
-#checkdroplets()
-#for i in report:
-#       print(i)
+count = 48;
+for i in range(count):
+        try:
+                createdroplet("worker","nyc1","1gb", "ubuntu-16-04-x64")
+        except Exception as err:
+                print("nope  -  " + str(err))
+
+
+#uploadkeymat('worker','ecdsa-sha2-nistp521 noway0099 root')
+
+#superdangerburnbytag(burntag)

@@ -14,6 +14,9 @@ import requests
 #4: Returns basic info about the droplet to the user, entrypoint provides phpshell (for tails users)
 #5: Runs timer (displayed to user), at zero deletes droplet and ssh-key, nukes webui too
 
+#cut keys: ssh-keygen -f ./frongleberries -t ecdsa -b 521
+#copy paste or do a open(realline(str(frongleberries))) for the var
+
 #PROTECT THE BEARER, OPSEC!
 apitoken = 'hahaimnotthattired'
 apiurl = 'https://api.digitalocean.com'
